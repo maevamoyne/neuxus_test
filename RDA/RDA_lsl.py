@@ -16,8 +16,8 @@ from socket import *
 from struct import *
 import numpy as np
 import mne
-from pylsl import StreamInfo, StreamOutlet, local_clock
-
+from mne_lsl.lsl.stream_info import StreamInfo
+from mne_lsl.lsl.stream_outlet import StreamOutlet
 
 # Marker class for storing marker information
 class Marker:
@@ -163,10 +163,29 @@ while not finish:
         print("Resolutions: " + str(resolutions))
         print("Channel Names: " + str(channelNames))
 
+
+        # Create Raw Array
+        if channelNames == []:
+            ch_names = [str(i+1) for i in range(channelCount)]
+        else:
+            ch_names = channelNames
+        sfreq = 1 / samplingInterval * 1e6
+
+        print(sfreq)
+        
+        mne_info = mne.create_info(ch_names=ch_names,
+                            sfreq=sfreq,
+                            ch_types='eeg')
+
+        # Create LSL outlet
+        lsl_info = StreamInfo('RDA2LSL', 'EEG', channelCount, sfreq, "float32", "myuid34234")
+        
+        lsl_info.set_channel_info(mne_info)
+
+        outlet = StreamOutlet(lsl_info)
+
+        # Initialize buffer
         buffer = np.empty((channelCount, 1))
-        # next make an outlet
-        info = StreamInfo('RDA2LSL', 'EEG', channelCount, sfreq, "float32", "myuid34234")
-        outlet = StreamOutlet(info)
 
 
     elif msgtype == 4:
@@ -180,7 +199,7 @@ while not finish:
             print("*** Overflow with " + str(block - lastBlock) + " datablocks ***")
         lastBlock = block
 
-        outlet.push_sample(data)
+        outlet.push_chunk(data.T)
 
 
     elif msgtype == 3:
@@ -191,19 +210,5 @@ while not finish:
 
 # Close tcpip connection
 con.close()
-
-# Create Raw Array
-if channelNames == []:
-    ch_names = [str(i+1) for i in range(channelCount)]
-else:
-    ch_names = channelNames
-info = mne.create_info(ch_names=ch_names,
-                       sfreq=250,
-                       ch_types='eeg')
-
-data = buffer * 1e-6
-raw = mne.io.RawArray(data, info)
-# Save
-raw.save('test_raw.fif', overwrite=True)
 
 

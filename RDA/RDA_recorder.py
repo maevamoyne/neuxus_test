@@ -16,7 +16,6 @@ from socket import *
 from struct import *
 import numpy as np
 import mne
-from pylsl import StreamInfo, StreamOutlet, local_clock
 
 
 # Marker class for storing marker information
@@ -114,105 +113,112 @@ def GetData(rawdata, channelCount):
 #
 ##############################################################################################
 
-# Create a tcpip socket
-con = socket(AF_INET, SOCK_STREAM)
+if __name__ == "__main__":
+    # Parse arguments
+    import argparse
+    parser = argparse.ArgumentParser()
 
-print("Waiting for connection...")
-while True:
-    try:
-        # Create a tcpip socket
-        con.connect(("localhost", 51254))
-        break
-    except Exception as e:
-        continue
-        
+    parser.add_argument("filename", help="The path of the file where to store the data",
+                        type=str)
+    args = parser.parse_args()
 
-# Flag for main loop
-finish = False
+    filename = args.filename
+    # Create a tcpip socket
+    con = socket(AF_INET, SOCK_STREAM)
 
-# data buffer for calculation, empty in beginning
-buffer = None
-
-# block counter to check overflows of tcpip buffer
-lastBlock = -1
-
-#### Main Loop ####
-while not finish:
-
-    # Get message header as raw array of chars
-    rawhdr = RecvData(con, 24)
-
-    # Split array into usefull information id1 to id4 are constants
-    (id1, id2, id3, id4, msgsize, msgtype) = unpack('<llllLL', rawhdr)
-
-    # Get data part of message, which is of variable size
-    rawdata = RecvData(con, msgsize - 24)
-
-    # Perform action dependend on the message type
-    if msgtype == 1:
-        # Start message, extract eeg properties and display them
-        # TODO: channel names not display
-        (channelCount, samplingInterval, resolutions, channelNames) = GetProperties(rawdata)
-        sfreq = 1 / samplingInterval * 1000
-        # reset block counter
-        lastBlock = -1
-
-        print("Start")
-        print("Number of channels: " + str(channelCount))
-        print("Sampling interval: " + str(samplingInterval))
-        print("Resolutions: " + str(resolutions))
-        print("Channel Names: " + str(channelNames))
-
-        buffer = np.empty((channelCount, 1))
-        # next make an outlet
-        info = StreamInfo('RDA2LSL', 'EEG', channelCount, sfreq, "float32", "myuid34234")
-        outlet = StreamOutlet(info)
-
-
-    elif msgtype == 4:
-        # Data message, extract data and markers
-        (block, points, markerCount, data, markers) = GetData(rawdata, channelCount)
-        data = np.array(data)
-        data = data.reshape(points, channelCount).T
-
-        # Check for overflow
-        if lastBlock != -1 and block > lastBlock + 1:
-            print("*** Overflow with " + str(block - lastBlock) + " datablocks ***")
-        lastBlock = block
-
-        # Print markers, if there are some in actual block
+    print("Waiting for connection...")
+    while True:
         try:
-            if markerCount > 0:
-                for m in range(markerCount):
-                    print("Marker " + markers[m].description + " of type " + markers[m].type)
+            # Create a tcpip socket
+            con.connect(("localhost", 51254))
+            break
         except Exception as e:
-            pass
+            continue
+            
 
-        outlet.push_sample(data)
+    # Flag for main loop
+    finish = False
+
+    # data buffer for calculation, empty in beginning
+    buffer = None
+
+    # block counter to check overflows of tcpip buffer
+    lastBlock = -1
+
+    #### Main Loop ####
+    while not finish:
+
+        # Get message header as raw array of chars
+        rawhdr = RecvData(con, 24)
+
+        # Split array into usefull information id1 to id4 are constants
+        (id1, id2, id3, id4, msgsize, msgtype) = unpack('<llllLL', rawhdr)
+
+        # Get data part of message, which is of variable size
+        rawdata = RecvData(con, msgsize - 24)
+
+        # Perform action dependend on the message type
+        if msgtype == 1:
+            # Start message, extract eeg properties and display them
+            # TODO: channel names not display
+            (channelCount, samplingInterval, resolutions, channelNames) = GetProperties(rawdata)
+            sfreq = 1 / samplingInterval * 1000
+            # reset block counter
+            lastBlock = -1
+
+            print("Start")
+            print("Number of channels: " + str(channelCount))
+            print("Sampling interval: " + str(samplingInterval))
+            print("Resolutions: " + str(resolutions))
+            print("Channel Names: " + str(channelNames))
+
+            buffer = np.empty((channelCount, 1))
 
 
+        elif msgtype == 4:
+            # Data message, extract data and markers
+            (block, points, markerCount, data, markers) = GetData(rawdata, channelCount)
+            data = np.array(data)
+            data = data.reshape(points, channelCount).T
 
-    elif msgtype == 3:
-        # Stop message, terminate program
-        print("Stop")
-        finish = True
+            # Check for overflow
+            if lastBlock != -1 and block > lastBlock + 1:
+                print("*** Overflow with " + str(block - lastBlock) + " datablocks ***")
+            lastBlock = block
+
+            # Print markers, if there are some in actual block
+            try:
+                if markerCount > 0:
+                    for m in range(markerCount):
+                        print("Marker " + markers[m].description + " of type " + markers[m].type)
+            except Exception as e:
+                pass
+                
+            buffer = np.hstack((buffer, data))
 
 
-# Close tcpip connection
-con.close()
+        elif msgtype == 3:
+            # Stop message, terminate program
+            print("Stop")
+            finish = True
 
-# Create Raw Array
-if channelNames == []:
-    ch_names = [str(i+1) for i in range(channelCount)]
-else:
-    ch_names = channelNames
-info = mne.create_info(ch_names=ch_names,
-                       sfreq=250,
-                       ch_types='eeg')
 
-data = buffer * 1e-6
-raw = mne.io.RawArray(data, info)
-# Save
-raw.save('test_raw.fif', overwrite=True)
+    # Close tcpip connection
+    con.close()
+
+    # Create Raw Array
+    if channelNames == []:
+        ch_names = [str(i+1) for i in range(channelCount)]
+    else:
+        ch_names = channelNames
+    sfreq = 1 / samplingInterval * 1e6
+    info = mne.create_info(ch_names=ch_names,
+                        sfreq=sfreq,
+                        ch_types='eeg')
+
+    data = buffer * 1e-6
+    raw = mne.io.RawArray(data, info)
+    # Save
+    raw.save('test_raw.fif', overwrite=True)
 
 
