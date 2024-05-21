@@ -216,9 +216,9 @@ if __name__ == "__main__":
                         sfreq=sfreq,
                         ch_types='eeg')
 
-    data = buffer * 1e-6
+    data = buffer * 1e-9
     raw = mne.io.RawArray(data, info)
     # Save
-    raw.save('test_raw.fif', overwrite=True)
+    raw.save(filename, overwrite=True)
 
 
