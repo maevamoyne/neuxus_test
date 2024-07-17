@@ -3,10 +3,10 @@ os.environ['NUMEXPR_MAX_THREADS'] = '12'
 
 from neuxus.nodes import correct, io, filter, read
 from cwl_node import CWL
+from save import Save
 
 
-
-data_path = r'C:\Users\victor.ferat\Documents\Soraya\EEG-MRI\P05_eyes_open_mrion.vhdr'
+data_path = r'C:\Users\victor.ferat\Documents\Soraya\EEG-MRI\P05_eyes_closed_mrion.vhdr'
 
 # signal = io.RdaReceive(rdaport=51244)
 # signal = io.LslReceive('name', 'MNE-LSL-Player', 'signal')
@@ -22,3 +22,4 @@ signal_lsl = io.LslSend(signal_ga.output, 'raw', type='EEG')
 
 signal_pa_lsl = io.LslSend(signal_cwl.output, 'cwl', type='EEG')
 
+signal_save = Save(signal_cwl.output, filename='fafa')
