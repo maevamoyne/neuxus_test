@@ -15,21 +15,24 @@ signal = read.Reader(data_path)
 
 # GA
 signal_ga = correct.GA(signal.output, marker_input_port=signal.marker_output, start_marker='Response/R128', tr=0.8)  # 'Response/R128' is the marker of the start of every MRI volume (in case the data is read from a Brain Vision file; in case it's streamed by Brain Vision Recorder, it is 'R128')
-
-# PA
-# signal_pa = correct.PA(...)
+signal_save_ga = Save(signal_ga.output, marker_input_port=signal_ga.marker_output, filename='P05_eyes_closed_mrion-GA-raw.fif')
 
 # Down-sample
 signal_ds = filter.DownSample(signal_ga.output, 20)
 
+# PA
+#signal_pa = correct.PA(signal_ds.output, weights_path=r"c:\Users\victor.ferat\Documents\GitHub\NeuXus\data\PA correction LSTM models\weights-input-500.pkl")
+
 # CWL
-signal_cwl = CWL(signal_ds.output, time_delay=21e-3, window_duration=4, overlap=0.5)
+#signal_pa_cwl = CWL(signal_pa.output, time_delay=21e-3, window_duration=4, overlap=0.5)
+#signal_cwl = CWL(signal_ds.output, time_delay=21e-3, window_duration=4, overlap=0.5)
 
 # Save
-signal_save = Save(signal_ga.output, filename='P05_eyes_closed_mrion-GA-raw.fif')
-signal_save = Save(signal_cwl.output, filename='P05_eyes_closed_mrion-CWL-raw.fif')
+#signal_save_ga = Save(signal_ga.output, filename='P05_eyes_closed_mrion-GA-raw.fif')
+#signal_save_ga_pa = Save(signal_pa.output, marker_input_port=signal_pa.marker_output, filename='P05_eyes_closed_mrion-GA-PA-raw.fif')
+#signal_save_ga_cwl = Save(signal_cwl.output, filename='P05_eyes_closed_mrion-GA-CWL-raw.fif')
+#signal_save_ga_pa_cwl = Save(signal_pa_cwl.output, filename='P05_eyes_closed_mrion-GA-PA-CWL-raw.fif')
 
 # Send to LSL
 #signal_lsl = io.LslSend(signal_ga.output, 'raw', type='EEG')
 #signal_pa_lsl = io.LslSend(signal_cwl.output, 'cwl', type='EEG')
-
