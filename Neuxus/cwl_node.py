@@ -90,8 +90,8 @@ class CWL(Node):
         self.window_duration = window_duration
         self.overlap = overlap
         # Find picks
-        self.cwl_picks = [i for i, ch in enumerate(self.channels) if 'CWL' in ch]
-        self.eeg_picks = [i for i, ch in enumerate(self.channels) if 'CWL' not in ch]
+        self.cwl_picks = [32, 33, 34, 35]
+        self.eeg_picks = np.arange(0,33)
 
         # Create MNE info object
         self.info = mne.create_info(self.channels, self.sfreq, ch_types=['eeg'] * len(self.channels))

@@ -1,8 +1,37 @@
 # neuxus_test
 
-## Neuxus
+## EEG PC
 
-### installer Neuxus
+### Installation
+
+### Create new conda env
+```bash
+conda create -n mne-lsl python=3.12
+```
+#### Install dependencies
+```bash
+conda activate mne-lsl
+pip install RDA/requirements.txt
+```
+
+### Usage
+
+1. Start Recorder
+
+2. Start Recview
+    - Filter Tree
+        MRI filter + RDA server
+    - Connect Recorder
+3. Start RDA_lsl.py (RDA/RDA_lsl.py)
+```bash
+conda activate mne-lsl
+python RDA_lsl.py
+```
+
+## Experiment PC
+
+### Installation
+
 ```bash
 conda create -n LaSEEB-neuxus python=3.7
 ```
@@ -15,10 +44,11 @@ conda activate LaSEEB-neuxus
 pip install -e .
 ```
 
-### use
+### Usage
+
 ```bash
 conda activate LaSEEB-neuxus
-neuxus /path/to/run.py
+neuxus recview_pipeline.py
 ```
 
 ## MNE-LSL
