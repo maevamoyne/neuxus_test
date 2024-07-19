@@ -1,3 +1,3 @@
 mne
-lsl
+pylsl
 numpy
