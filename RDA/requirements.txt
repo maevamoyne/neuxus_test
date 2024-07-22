@@ -1,3 +1,4 @@
 mne
 pylsl
+mne-lsl
 numpy
