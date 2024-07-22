@@ -57,7 +57,7 @@ neuxus recview_pipeline.py
 ```bash
 conda create -n mne-lsl python=3.10
 conda activate mne-lsl
-pip isntall mne-lsl pyqt5
+pip install mne-lsl pyqt5
 ```
 
 ### use
