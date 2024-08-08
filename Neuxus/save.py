@@ -9,11 +9,12 @@ import numpy as np
 import mne
 
 class Save(Node):
-    def __init__(self, input_port, marker_input_port=None, filename='test-raw.fif'):
+    def __init__(self, input_port, marker_input_port=None, filename='test-raw.fif', overwrite=False):
         Node.__init__(self, input_port)
         self.channels = self.input.channels
         self.sfreq = self.input.sampling_frequency
         self.marker_input = marker_input_port
+        self.overwrite = overwrite
         # Inputs
         self.filename = filename
         # Create MNE info object
@@ -45,7 +46,6 @@ class Save(Node):
                 for timestamp, value in zip(marker_timestamps, marker_values):
                     self.marker_timestmaps.append(timestamp)
                     self.marker_values.append(value)
-        print(self.marker_timestmaps, self.marker_values)
                 
 
     def terminate(self):
@@ -57,5 +57,5 @@ class Save(Node):
            annotations += mne.Annotations(onset=timestamp, duration=0, description=value)
         raw.set_annotations(annotations)
 
-        raw.save(self.filename)
+        raw.save(self.filename, overwrite=self.overwrite)
         return super().terminate()
