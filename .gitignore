@@ -156,3 +156,5 @@ cython_debug/
 P05_eyes_open_mrion.eeg
 P05_eyes_open_mrion.vhdr
 P05_eyes_open_mrion.vmrk
+Post_corrections/Reference/P03_eyes_closed-ref-.eeg
+Post_corrections/Reference/P03_eyes_closed-ref-.ehst2
