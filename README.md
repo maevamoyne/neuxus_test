@@ -11,7 +11,7 @@ conda create -n mne-lsl python=3.12
 #### Install dependencies
 ```bash
 conda activate mne-lsl
-pip install RDA/requirements.txt
+pip install -r RDA/requirements.txt
 ```
 
 ### Usage
